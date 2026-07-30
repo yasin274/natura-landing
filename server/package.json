@@ -1,0 +1,40 @@
+{
+  "name": "natura-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Natura — бэкенд магазина мебели: каталог, заказы, админка",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "db:ddl": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
+    "hash": "node scripts/hash-password.mjs",
+    "keygen": "node --input-type=module -e \"import{randomBytes}from'node:crypto';console.log('JWT_SECRET='+randomBytes(48).toString('base64url'))\""
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.10.1",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3"
+  }
+}

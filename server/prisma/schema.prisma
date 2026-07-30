@@ -1,0 +1,165 @@
+// Схема БД магазина Natura.
+//
+// Prisma 7: генератор `prisma-client` (не `prisma-client-js`), `output` обязателен,
+// строка подключения задаётся в prisma.config.ts, а не через env() здесь.
+//
+// ВАЖНО про имена таблиц. База общая на несколько проектов автора, поэтому
+// все таблицы и enum-типы вынесены в пространство имён `natura_*`. Без префикса
+// таблица `products` этого магазина столкнулась бы с одноимённой таблицей
+// соседнего сервиса, и первая же миграция уронила бы чужой проект.
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Состояние заказа. Порядок значений — жизненный цикл заявки.
+enum OrderStatus {
+  /// Только что оформлен, менеджер ещё не связался с покупателем.
+  NEW
+  /// Покупатель подтвердил состав и условия по телефону.
+  CONFIRMED
+  /// Доставлен и оплачен.
+  DONE
+  /// Отменён покупателем или магазином.
+  CANCELLED
+
+  @@map("natura_order_status")
+}
+
+/// Раздел каталога: диваны, кресла, столы и т. д.
+model Category {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Человекочитаемый идентификатор для ссылок и фильтра (?category=sofas).
+  /// Фильтруем именно по slug, а не по uuid: адрес /catalog?category=sofas
+  /// переживает перезаливку базы, а адрес с uuid — нет.
+  slug  String @unique
+  title String
+
+  /// Порядок вывода задаём вручную: «по алфавиту» для витрины бессмысленно,
+  /// диваны должны стоять первыми независимо от буквы.
+  sortOrder Int @default(100)
+
+  products Product[]
+
+  @@map("natura_categories")
+}
+
+/// Товар витрины.
+model Product {
+  id String @id @default(uuid()) @db.Uuid
+
+  slug        String @unique
+  title       String
+  description String
+
+  /// Цена в ЦЕЛЫХ РУБЛЯХ.
+  ///
+  /// Не Decimal и не копейки осознанно: мебель не продаётся с копейками,
+  /// а Int избавляет разом от двух проблем — от ошибок округления float
+  /// и от обёртки Prisma.Decimal, которую пришлось бы конвертировать
+  /// в каждом ответе API и в каждом расчёте суммы заказа.
+  price Int
+
+  /// Цена «до скидки». null — скидки нет; фронтенд по наличию значения
+  /// сам решает, показывать ли зачёркнутую цену и плашку «−N%».
+  oldPrice Int?
+
+  categoryId String   @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  /// Путь или полный URL картинки. Если файла нет, лендинг покажет
+  /// векторную заготовку — поэтому битая ссылка витрину не ломает.
+  imageUrl String
+
+  /// Нет в наличии — карточка видна, но кнопка «в корзину» заблокирована.
+  /// Это разные вещи: снимать с витрины товар, который вот-вот приедет, вредно.
+  inStock Boolean @default(true)
+
+  /// Черновик (false) не отдаётся публичным API вообще.
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  orderItems OrderItem[]
+
+  /// Индексы под единственный «горячий» запрос витрины:
+  /// опубликованные товары одной категории, свежие сверху.
+  @@index([categoryId, isPublished])
+  @@index([createdAt])
+  @@map("natura_products")
+}
+
+/// Заказ, оформленный через форму на лендинге.
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+
+  customerName String
+  /// Телефон, почта или ник в мессенджере — одним полем.
+  /// Формат не навязываем: покупателю удобнее оставить то, чем он пользуется.
+  contact String
+  comment String?
+
+  /// Итоговая сумма, посчитанная СЕРВЕРОМ по ценам из базы на момент заказа.
+  /// Сумма с клиента не принимается никогда — иначе цену подделает кто угодно.
+  total Int
+
+  status OrderStatus @default(NEW)
+
+  createdAt DateTime @default(now())
+
+  items OrderItem[]
+
+  /// Админка всегда листает заказы по статусу и дате — под это и индекс.
+  @@index([status, createdAt])
+  @@map("natura_orders")
+}
+
+/// Позиция заказа.
+model OrderItem {
+  id      String @id @default(uuid()) @db.Uuid
+  orderId String @db.Uuid
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  /// Ссылка на товар нужна для отчётов «что покупают», но она не источник
+  /// названия и цены — см. ниже.
+  productId String  @db.Uuid
+  product   Product @relation(fields: [productId], references: [id])
+
+  /// Название и цена ДУБЛИРУЮТСЯ намеренно.
+  ///
+  /// Заказ — документ о том, что произошло. Через месяц товар подорожает,
+  /// сменит название или уйдёт с витрины, и join к `natura_products` показал бы
+  /// менеджеру не ту сумму, о которой договаривались с покупателем.
+  /// Поэтому позиция хранит собственный снимок данных на момент оформления.
+  title String
+  price Int
+
+  quantity Int
+
+  @@index([orderId])
+  @@map("natura_order_items")
+}
+
+/// Администратор магазина.
+///
+/// Отдельная таблица, а не «роль у пользователя»: покупатели на этом сайте
+/// не регистрируются вообще, заказ оформляется без аккаунта. Заводить систему
+/// пользователей ради двух менеджеров — лишняя сущность.
+model AdminUser {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("natura_admin_users")
+}

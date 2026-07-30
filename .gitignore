@@ -1,0 +1,17 @@
+node_modules/
+dist/
+
+# Секреты: в .env лежат строка подключения к БД, JWT_SECRET и токен Telegram-бота
+.env
+.env.*
+!.env.example
+
+# Prisma Client генерируется локально командой `npm run prisma:generate`
+server/src/generated/
+
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

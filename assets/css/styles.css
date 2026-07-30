@@ -898,3 +898,175 @@ s { text-decoration-thickness: 1px; }
   body { background: #fff; }
   [data-reveal] { opacity: 1; transform: none; }
 }
+
+/* ─────────── 20. КАТАЛОГ ИЗ БАЗЫ ─────────── */
+/* Блок добавлен вместе с бэкендом. Собственных цветов и шрифтов здесь нет —
+   только токены из раздела 1, чтобы витрина не отличалась от остального сайта. */
+
+.shop { padding-bottom: var(--sec-y); }
+
+.shop__head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+/* Фильтры-«таблетки». Горизонтальная прокрутка на узких экранах вместо
+   переноса: восемь разделов в столбик съедали бы весь первый экран. */
+.chips {
+  display: flex; gap: .5rem; flex-wrap: wrap;
+  max-width: 100%;
+}
+.chip {
+  min-height: 40px; padding: .5rem 1rem;
+  border-radius: var(--r-pill);
+  background: var(--card); border: 1px solid var(--line);
+  font-size: var(--fs-sm); font-weight: 500; color: var(--ink-2);
+  white-space: nowrap;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.chip:hover { border-color: var(--olive); color: var(--olive); }
+.chip.is-on { background: var(--olive); border-color: var(--olive); color: #fff; }
+.chip__count { opacity: .6; font-variant-numeric: tabular-nums; margin-left: .3rem; }
+
+/* Сетка, а не .track: в каталоге товаров много, и горизонтальная лента
+   с сотней позиций неудобна — нужен обзор целиком. */
+.shop__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: var(--space-5);
+}
+
+.card__desc {
+  font-size: var(--fs-sm); color: var(--muted); line-height: 1.55;
+  /* Описания в базе разной длины — обрезаем до трёх строк, иначе карточки
+     в сетке разъезжаются по высоте. */
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card__foot--shop { justify-content: space-between; }
+.stock {
+  font-size: var(--fs-xs); color: var(--terra); font-weight: 600;
+}
+.addbtn:disabled { opacity: .4; cursor: not-allowed; }
+.addbtn:disabled:hover { background: var(--cream-2); color: var(--ink); }
+
+/* Заглушка и ошибки каталога. Пустой экран без объяснения читается как
+   поломка сайта, поэтому состояние всегда подписано словами. */
+.shop__state {
+  padding: var(--space-7) var(--space-5);
+  border: 1px dashed var(--line); border-radius: var(--r-lg);
+  background: var(--card);
+  text-align: center; color: var(--muted); font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+.shop__state b { display: block; color: var(--ink); font-size: var(--fs-h3); margin-bottom: .4rem; font-family: var(--font-display); font-weight: 600; }
+.shop__more { display: flex; justify-content: center; margin-top: var(--space-6); }
+
+/* ─────────── 21. КОРЗИНА И ОФОРМЛЕНИЕ ─────────── */
+.cart[hidden] { display: none; }
+.cart {
+  position: fixed; inset: 0; z-index: 150;
+  display: flex; justify-content: flex-end;
+}
+.cart__scrim {
+  position: absolute; inset: 0;
+  background: rgb(35 35 30 / .45);
+  opacity: 0; transition: opacity var(--t);
+}
+.cart.is-on .cart__scrim { opacity: 1; }
+.cart__panel {
+  position: relative;
+  width: min(30rem, 100%); height: 100%;
+  background: var(--cream); border-left: 1px solid var(--line);
+  box-shadow: var(--sh-lg);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform var(--t-slow);
+  overflow-y: auto; overscroll-behavior: contain;
+}
+.cart.is-on .cart__panel { transform: none; }
+
+.cart__head {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  padding: 1.1rem var(--space-5);
+  background: var(--cream); border-bottom: 1px solid var(--line);
+}
+.cart__title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; }
+.cart__body { padding: var(--space-5); display: grid; gap: var(--space-5); }
+
+.cart__list { display: grid; gap: .9rem; }
+.cart__item {
+  display: grid; grid-template-columns: 4.5rem 1fr auto; gap: .9rem;
+  align-items: center;
+  padding-bottom: .9rem; border-bottom: 1px solid var(--line);
+}
+.cart__item:last-child { border-bottom: 0; padding-bottom: 0; }
+.cart__thumb { width: 4.5rem; aspect-ratio: 1; border-radius: var(--r-sm); }
+.cart__name { font-size: var(--fs-sm); font-weight: 600; line-height: 1.35; }
+.cart__price { font-size: var(--fs-xs); color: var(--muted); margin-top: .2rem; font-variant-numeric: tabular-nums; }
+.cart__qty { display: flex; align-items: center; gap: .35rem; }
+.qbtn {
+  width: 32px; height: 32px; border-radius: var(--r-pill);
+  background: var(--card); border: 1px solid var(--line);
+  display: grid; place-items: center; font-size: 1rem; line-height: 1;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.qbtn:hover { background: var(--olive); border-color: var(--olive); color: #fff; }
+.cart__num { min-width: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: var(--fs-sm); }
+.cart__drop { font-size: var(--fs-xs); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.cart__drop:hover { color: var(--terra); }
+
+.cart__total {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-top: var(--space-4); border-top: 1px solid var(--line);
+}
+.cart__total-label { font-size: var(--fs-sm); color: var(--muted); }
+.cart__total-sum { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.cart__empty { text-align: center; color: var(--muted); font-size: var(--fs-sm); line-height: 1.6; padding: var(--space-6) 0; }
+
+/* Форма заказа. Поля прямоугольные, а не «таблетки» из подписки:
+   там одно поле, здесь четыре, и вертикальный список читается спокойнее. */
+.oform { display: grid; gap: .85rem; }
+.oform__label { font-size: var(--fs-xs); color: var(--muted); display: grid; gap: .35rem; }
+.oform__input, .oform__area {
+  width: 100%;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: .75rem .9rem;
+  font-size: var(--fs-sm); color: var(--ink);
+  transition: border-color var(--t);
+}
+.oform__area { resize: vertical; min-height: 4.5rem; font-family: inherit; }
+.oform__input:focus, .oform__area:focus { outline: none; border-color: var(--olive); }
+.oform__input[aria-invalid="true"], .oform__area[aria-invalid="true"] { border-color: var(--terra); }
+
+/* Ловушка для ботов: скрыта от людей, но остаётся в DOM для автозаполнителей.
+   display:none многие боты пропускают, поэтому уводим за пределы экрана. */
+.oform__honey {
+  position: absolute; left: -9999px; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none;
+}
+
+.oform__consent {
+  display: flex; gap: .6rem; align-items: flex-start;
+  font-size: var(--fs-xs); color: var(--muted); line-height: 1.5;
+}
+.oform__consent input { margin-top: .15rem; width: 1.05rem; height: 1.05rem; accent-color: var(--olive); flex: none; }
+.oform__consent a { color: var(--olive); text-decoration: underline; text-underline-offset: 2px; }
+.oform__msg { min-height: 1.2em; font-size: var(--fs-xs); line-height: 1.45; color: var(--muted); }
+.oform__msg.is-bad { color: var(--terra); }
+.oform__msg.is-ok  { color: var(--olive); }
+.oform button[type="submit"] { width: 100%; }
+.oform button[type="submit"]:disabled { opacity: .6; cursor: progress; }
+
+@media (max-width: 640px) {
+  .shop__grid { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--space-4); }
+  .cart__panel { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart__panel { transition: none; }
+}

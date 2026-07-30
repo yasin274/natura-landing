@@ -91,7 +91,7 @@
       <button class="iconbtn" type="button" aria-label="Личный кабинет">
         <svg class="ic ic--20"><use href="#i-user"/></svg>
       </button>
-      <button class="iconbtn iconbtn--cart" type="button" aria-label="Корзина">
+      <button class="iconbtn iconbtn--cart" type="button" data-cart-open aria-label="Открыть корзину">
         <svg class="ic ic--20"><use href="#i-cart"/></svg>
         <span class="badge" data-cart-count aria-live="polite" aria-atomic="true">0</span>
       </button>
@@ -211,19 +211,44 @@
 <section class="cats shell" id="collections" aria-labelledby="cats-h">
   <h2 class="sr-only" id="cats-h">Категории мебели</h2>
   <ul class="cats__row" data-reveal>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-sofa"/></svg></span><span class="cat__name">Диваны</span></a></li>
-    <li><a class="cat is-active" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-chair"/></svg></span><span class="cat__name">Кресла</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-table"/></svg></span><span class="cat__name">Столы</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-bed"/></svg></span><span class="cat__name">Кровати</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-storage"/></svg></span><span class="cat__name">Хранение</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-light"/></svg></span><span class="cat__name">Свет</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-decor"/></svg></span><span class="cat__name">Декор</span></a></li>
-    <li><a class="cat" href="#catalog"><span class="cat__art"><svg class="ic ic--32"><use href="#c-outdoor"/></svg></span><span class="cat__name">Для&nbsp;улицы</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="sofas"><span class="cat__art"><svg class="ic ic--32"><use href="#c-sofa"/></svg></span><span class="cat__name">Диваны</span></a></li>
+    <li><a class="cat is-active" href="#catalog" data-cat="chairs"><span class="cat__art"><svg class="ic ic--32"><use href="#c-chair"/></svg></span><span class="cat__name">Кресла</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="tables"><span class="cat__art"><svg class="ic ic--32"><use href="#c-table"/></svg></span><span class="cat__name">Столы</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="beds"><span class="cat__art"><svg class="ic ic--32"><use href="#c-bed"/></svg></span><span class="cat__name">Кровати</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="storage"><span class="cat__art"><svg class="ic ic--32"><use href="#c-storage"/></svg></span><span class="cat__name">Хранение</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="lighting"><span class="cat__art"><svg class="ic ic--32"><use href="#c-light"/></svg></span><span class="cat__name">Свет</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="decor"><span class="cat__art"><svg class="ic ic--32"><use href="#c-decor"/></svg></span><span class="cat__name">Декор</span></a></li>
+    <li><a class="cat" href="#catalog" data-cat="outdoor"><span class="cat__art"><svg class="ic ic--32"><use href="#c-outdoor"/></svg></span><span class="cat__name">Для&nbsp;улицы</span></a></li>
   </ul>
 </section>
 
+<!-- ══════════ Каталог из базы ══════════ -->
+<!-- Разметка карточек здесь пустая: содержимое приходит из API
+     (GET /api/catalog/products) и собирается в assets/js/shop.js.
+     Пока каталог грузится, в .shop__state лежит подпись — пустой экран
+     без объяснения читается как поломка сайта. -->
+<section class="shop shell" id="catalog" aria-labelledby="shop-h">
+  <div class="shop__head" data-reveal>
+    <div>
+      <p class="eyebrow">Каталог</p>
+      <h2 class="h2" id="shop-h">Всё, что&nbsp;можно заказать</h2>
+    </div>
+    <div class="chips" id="shop-filters" role="group" aria-label="Разделы каталога"></div>
+  </div>
+
+  <p class="shop__state" id="shop-state" role="status" aria-live="polite">Загружаем каталог…</p>
+
+  <ul class="shop__grid" id="shop-grid" aria-label="Товары каталога"></ul>
+
+  <div class="shop__more">
+    <button class="btn btn--ghost" type="button" id="shop-more" hidden>
+      Показать ещё <svg class="ic ic--18"><use href="#i-arrow-r"/></svg>
+    </button>
+  </div>
+</section>
+
 <!-- ══════════ Хиты продаж ══════════ -->
-<section class="best shell" id="catalog" aria-labelledby="best-h">
+<section class="best shell" id="best" aria-labelledby="best-h">
   <div class="best__intro" data-reveal>
     <p class="eyebrow">Хиты продаж</p>
     <h2 class="h2" id="best-h">Наши любимые<br>предметы</h2>
@@ -286,9 +311,9 @@
               <button class="sw" type="button" style="--sw:#C7B08C" data-sw aria-pressed="false" aria-label="Обивка: карамель"><span class="sr-only">Карамель</span></button>
               <button class="sw" type="button" style="--sw:#8F9B72" data-sw aria-pressed="false" aria-label="Обивка: олива"><span class="sr-only">Олива</span></button>
             </div>
-            <button class="addbtn" type="button" data-add aria-label="Добавить «Диван Луна» в корзину">
+            <a class="addbtn" href="#catalog" aria-label="Открыть каталог с этим товаром">
               <svg class="ic ic--18"><use href="#i-cart"/></svg>
-            </button>
+            </a>
           </div>
         </div>
       </li>
@@ -328,9 +353,9 @@
               <button class="sw" type="button" style="--sw:#C0966A" data-sw aria-pressed="false" aria-label="Отделка: натуральный дуб"><span class="sr-only">Натуральный дуб</span></button>
               <button class="sw" type="button" style="--sw:#D8D2C6" data-sw aria-pressed="false" aria-label="Отделка: белёный дуб"><span class="sr-only">Белёный дуб</span></button>
             </div>
-            <button class="addbtn" type="button" data-add aria-label="Добавить «Обеденный стол Хейвен» в корзину">
+            <a class="addbtn" href="#catalog" aria-label="Открыть каталог с этим товаром">
               <svg class="ic ic--18"><use href="#i-cart"/></svg>
-            </button>
+            </a>
           </div>
         </div>
       </li>
@@ -371,9 +396,9 @@
               <button class="sw" type="button" style="--sw:#8B5E3C" data-sw aria-pressed="false" aria-label="Обивка: терракота"><span class="sr-only">Терракота</span></button>
               <button class="sw" type="button" style="--sw:#EDE6D8" data-sw aria-pressed="false" aria-label="Обивка: молоко"><span class="sr-only">Молоко</span></button>
             </div>
-            <button class="addbtn" type="button" data-add aria-label="Добавить «Кресло Каса Лаунж» в корзину">
+            <a class="addbtn" href="#catalog" aria-label="Открыть каталог с этим товаром">
               <svg class="ic ic--18"><use href="#i-cart"/></svg>
-            </button>
+            </a>
           </div>
         </div>
       </li>
@@ -414,9 +439,9 @@
               <button class="sw is-on" type="button" style="--sw:#8B5E3C" data-sw aria-pressed="true" aria-label="Отделка: орех"><span class="sr-only">Орех</span></button>
               <button class="sw" type="button" style="--sw:#C1976B" data-sw aria-pressed="false" aria-label="Отделка: дуб"><span class="sr-only">Дуб</span></button>
             </div>
-            <button class="addbtn" type="button" data-add aria-label="Добавить «Комод Мило» в корзину">
+            <a class="addbtn" href="#catalog" aria-label="Открыть каталог с этим товаром">
               <svg class="ic ic--18"><use href="#i-cart"/></svg>
-            </button>
+            </a>
           </div>
         </div>
       </li>
@@ -709,7 +734,7 @@
   <div class="shell footer__bottom">
     <p>© 2026 Natura. Все права защищены.</p>
     <ul>
-      <li><a href="#">Политика конфиденциальности</a></li>
+      <li><a href="privacy.html">Политика конфиденциальности</a></li>
       <li><a href="#">Условия использования</a></li>
       <li><a href="#">Cookie</a></li>
     </ul>
@@ -718,6 +743,82 @@
 
 <div class="toast" data-toast role="status" aria-live="polite"></div>
 
+<!-- ══════════ Корзина и оформление заказа ══════════ -->
+<aside class="cart" id="cart" hidden>
+  <div class="cart__scrim" data-cart-close></div>
+
+  <div class="cart__panel" role="dialog" aria-modal="true" aria-labelledby="cart-h">
+    <div class="cart__head">
+      <h2 class="cart__title" id="cart-h">Ваш заказ</h2>
+      <button class="iconbtn" type="button" data-cart-close aria-label="Закрыть корзину">
+        <svg class="ic ic--20"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="cart__body">
+      <p class="cart__empty" id="cart-empty" hidden>
+        Пока пусто. Загляните в&nbsp;каталог — там всё, что&nbsp;есть в&nbsp;наличии.
+      </p>
+
+      <ul class="cart__list" id="cart-list"></ul>
+
+      <div class="cart__total" id="cart-total-row" hidden>
+        <span class="cart__total-label">Итого</span>
+        <span class="cart__total-sum" id="cart-total">0&nbsp;₽</span>
+      </div>
+
+      <!-- novalidate: свои сообщения на русском вместо браузерных подсказок,
+           которые на разных движках выглядят по-разному -->
+      <form class="oform" id="order-form" novalidate hidden>
+        <label class="oform__label" for="o-name">
+          Как к&nbsp;вам обращаться
+          <input class="oform__input" id="o-name" name="customerName" type="text"
+                 autocomplete="name" maxlength="100" required>
+        </label>
+
+        <label class="oform__label" for="o-contact">
+          Телефон, почта или&nbsp;ник — как вам удобнее
+          <input class="oform__input" id="o-contact" name="contact" type="text"
+                 autocomplete="tel" maxlength="200" required>
+        </label>
+
+        <label class="oform__label" for="o-comment">
+          Комментарий к&nbsp;заказу (необязательно)
+          <textarea class="oform__area" id="o-comment" name="comment" maxlength="2000" rows="3"></textarea>
+        </label>
+
+        <!-- Ловушка для ботов: человек этого поля не видит и не заполняет,
+             автоматический заполнитель форм — заполняет. Заполненное поле
+             сервер считает признаком бота. -->
+        <div class="oform__honey" aria-hidden="true">
+          <label for="o-company">Компания</label>
+          <input id="o-company" name="company" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
+        <label class="oform__consent">
+          <input type="checkbox" id="o-consent" name="consent" required>
+          <span>
+            Согласен(на) на&nbsp;обработку персональных данных в&nbsp;соответствии
+            с&nbsp;<a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.
+          </span>
+        </label>
+
+        <p class="oform__msg" id="order-msg" role="status" aria-live="polite"></p>
+
+        <button class="btn btn--primary" type="submit">Оформить заказ</button>
+      </form>
+    </div>
+  </div>
+</aside>
+
+<script>
+  /* Адрес API. Пусто — тот же origin: сервер раздаёт лендинг сам, поэтому
+     при запуске через `npm start` менять здесь ничего не нужно.
+     Если страница открыта отдельно (Live Server, GitHub Pages), укажите
+     полный адрес сервера, например 'https://api.natura.ru'. */
+  window.NATURA_API_BASE = '';
+</script>
 <script src="assets/js/main.js" defer></script>
+<script src="assets/js/shop.js" defer></script>
 </body>
 </html>

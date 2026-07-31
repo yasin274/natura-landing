@@ -1,17 +1,27 @@
 /**
  * Разворачивает базу Natura с нуля: схема, каталог, администратор.
  *
+ * ── Почему драйвер Neon, а не обычный pg ────────────────────────────────────
+ *
+ * Postgres слушает порт 5432, и у части провайдеров он закрыт: соединение
+ * принимается, а на первый же пакет протокола сервер молча отключается.
+ * Проверено сравнением — Supabase на порту 6543 отвечает, он же на 5432
+ * закрывается, как и Neon, который других портов не предлагает.
+ *
+ * Драйвер `@neondatabase/serverless` ходит по WebSocket поверх 443 — тому
+ * самому порту, по которому работает весь остальной интернет. Протокол
+ * Postgres внутри тот же, отличается только транспорт.
+ *
  * ── Почему не `prisma migrate deploy` ───────────────────────────────────────
  *
- * Управляемые базы (Supabase, Neon) выдают пулер, а через него не проходит
- * schema engine Prisma: пулер не держит сессионное состояние, на котором тот
- * построен. Поэтому DDL применяется обычным клиентом pg, одним куском внутри
- * транзакции.
+ * Через пулер управляемых баз не проходит schema engine Prisma: пулер не
+ * держит сессионное состояние, на котором тот построен. DDL применяется
+ * напрямую, одним куском внутри транзакции.
  *
  * ── Идемпотентность ─────────────────────────────────────────────────────────
  *
  * Гонять можно повторно: в миграции везде IF NOT EXISTS, сиды пропускаются,
- * если каталог уже заполнен, а администратор обновляется по email.
+ * если каталог уже заполнен, администратор обновляется по email.
  *
  *   node scripts/setup.mjs                      — схема и каталог
  *   node scripts/setup.mjs --admin "пароль"     — плюс администратор
@@ -23,8 +33,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
-import pg from 'pg';
+import { Client, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
 import 'dotenv/config';
+
+// В Node нет встроенного WebSocket-клиента для этого драйвера — подставляем ws.
+neonConfig.webSocketConstructor = ws;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -41,8 +55,7 @@ if (!process.env.DATABASE_URL) {
   console.error(
     'Не задан DATABASE_URL.\n\n' +
       'Открой server/.env и вставь строку подключения.\n' +
-      'Для Neon: Dashboard → проект → Connect → Connection string,\n' +
-      'галочка «Pooled connection», и в конце обязательно ?sslmode=require',
+      'Для Neon: Dashboard → проект → Connect → Connection string.',
   );
   process.exit(1);
 }
@@ -52,11 +65,7 @@ if (adminFlag >= 0 && (!adminPassword || adminPassword.length < 8)) {
   process.exit(1);
 }
 
-const client = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
-
+const client = new Client(process.env.DATABASE_URL);
 await client.connect();
 
 try {
@@ -75,6 +84,7 @@ try {
 
   if (schemaOnly) {
     console.log('Каталог пропущен (--schema).');
+    await client.end();
     process.exit(0);
   }
 
@@ -115,5 +125,5 @@ try {
   console.error('Не получилось:', error.message);
   process.exitCode = 1;
 } finally {
-  await client.end();
+  await client.end().catch(() => {});
 }

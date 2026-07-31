@@ -1,4 +1,6 @@
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { env, isDevelopment } from './env.js';
 
@@ -7,9 +9,24 @@ import { env, isDevelopment } from './env.js';
  *
  * Prisma 7 обязательно требует драйвер-адаптер: `new PrismaClient()` без
  * `adapter` теперь бросает ошибку. Rust-движок выпилен, запросы исполняет
- * связка TypeScript + WASM поверх обычного пула `pg`.
+ * связка TypeScript + WASM поверх драйвера.
+ *
+ * ── Почему драйвер Neon, а не обычный pg ──────────────────────────────────
+ *
+ * Postgres слушает порт 5432, и у части провайдеров он закрыт: соединение
+ * принимается, а на первый же пакет протокола сервер молча отключается.
+ * Проверено сравнением — Supabase на порту 6543 отвечает, он же на 5432
+ * закрывается, ровно как Neon, который других портов не предлагает.
+ *
+ * Этот драйвер несёт протокол Postgres внутри WebSocket поверх 443 — порта,
+ * который открыт везде. Логика запросов от этого не меняется.
+ *
+ * Обратная сторона: адаптер привязывает проект к Neon. Переезд на обычный
+ * Postgres — это возврат к PrismaPg и строка подключения, больше ничего.
  */
-const adapter = new PrismaPg({
+neonConfig.webSocketConstructor = ws;
+
+const adapter = new PrismaNeon({
   connectionString: env.DATABASE_URL,
 });
 

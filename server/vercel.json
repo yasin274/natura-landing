@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "natura-api": {
+      "root": ".",
+      "entrypoint": "dist/server.js"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": { "type": "service", "service": "natura-api" }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "natura-landing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Natura — лендинг мебельной мастерской с каталогом, корзиной и заказами",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "build": "npm --prefix server ci --include=dev && npm --prefix server run build && node scripts/collect-public.mjs",
+    "start": "node server/dist/server.js"
+  }
+}

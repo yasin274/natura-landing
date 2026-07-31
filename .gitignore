@@ -17,3 +17,6 @@ Thumbs.db
 .vscode/
 
 .vercel
+
+# Собирается командой build, в репозиторий не коммитится.
+public/

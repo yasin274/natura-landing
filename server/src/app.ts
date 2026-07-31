@@ -42,9 +42,33 @@ app.use('/api', routes);
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 // dist/app.js → server/dist → server → корень репозитория (для tsx: src → server → корень).
-const landingRoot = path.resolve(here, '..', '..');
+const repoRoot = path.resolve(here, '..', '..');
 
-if (env.SERVE_STATIC && existsSync(path.join(landingRoot, 'index.html'))) {
+/**
+ * Где искать статику.
+ *
+ * `public/` идёт первой: её собирает `npm run build`, и в развёртывании на
+ * Vercel только она и существует — их сборщик кладёт в сервис лишь то, что
+ * прослеживается из точки входа, поэтому папка перечислена в `includeFiles`.
+ * Корень репозитория — запасной вариант для локального запуска, где сборку
+ * статики никто не делал.
+ */
+const landingRoot = [path.join(repoRoot, 'public'), repoRoot].find((dir) =>
+  existsSync(path.join(dir, 'index.html')),
+);
+
+/**
+ * Строка в журнал при старте.
+ *
+ * Без неё «страница не открывается» превращается в гадание: раздача статики
+ * зависит от переменной и от того, куда легли файлы при развёртывании, а
+ * снаружи это неотличимо от обычного 404.
+ */
+console.log(
+  `[статика] SERVE_STATIC=${env.SERVE_STATIC} корень=${repoRoot} папка=${landingRoot ?? 'НЕ НАЙДЕНА'}`,
+);
+
+if (env.SERVE_STATIC && landingRoot) {
   app.use(express.static(landingRoot, { maxAge: '1h', index: 'index.html' }));
 }
 

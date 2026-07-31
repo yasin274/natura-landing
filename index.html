@@ -818,6 +818,17 @@
      полный адрес сервера, например 'https://api.natura.ru'. */
   window.NATURA_API_BASE = '';
 </script>
+<script>
+/* Где искать API.
+   Локально сервер раздаёт и страницы, и API — тогда работает относительный
+   путь /api и вопрос origin не возникает. В сети статику отдаёт CDN, а
+   бэкенд живёт отдельным проектом: сборщик Vercel кладёт в функцию только
+   то, что прослеживается из кода, и фотографии внутрь неё не попадают.
+   Поэтому на своих доменах указываем адрес API явно. */
+if (location.hostname.endsWith('vercel.app') || location.hostname.endsWith('github.io')) {
+  window.NATURA_API_BASE = 'https://natura-api.vercel.app';
+}
+</script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/shop.js" defer></script>
 </body>

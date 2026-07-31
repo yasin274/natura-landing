@@ -16,7 +16,8 @@
     "db:ddl": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
     "hash": "node scripts/hash-password.mjs",
     "keygen": "node --input-type=module -e \"import{randomBytes}from'node:crypto';console.log('JWT_SECRET='+randomBytes(48).toString('base64url'))\"",
-    "db:setup": "node scripts/setup.mjs"
+    "db:setup": "node scripts/setup.mjs",
+    "vercel-build": "npm ci --include=dev && prisma generate && tsc -p tsconfig.json"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
